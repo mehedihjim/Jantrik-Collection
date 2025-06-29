@@ -23,14 +23,14 @@ export default function Home() {
           <div>
             <h1 className="logo-font font-bold text-2xl flex items-center gap-2 select-none tracking-wide">
               <NotebookText className="text-blue-400 w-8 h-8" />
-              {`Imraan's Collection`}
+              {"Jantrik Collection"}
             </h1>
           </div>
           <ThemeToggle />
         </div>
 
         <div className="flex flex-col items-center gap-4 pt-6 pb-8">
-          <h2 className="text-6xl font-medium">Jantrik Collection</h2>
+          <h2 className="text-6xl font-medium">{`Imraan's Jantrik Collection`}</h2>
           <p className="max-w-xl text-center text-base opacity-70">
             An easy-to-use platform for organizing your number bids. Add
             numbers, track amounts, and export your collection data for

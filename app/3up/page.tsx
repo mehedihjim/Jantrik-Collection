@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { CollectionManager } from '@/components/collection-manager';
-import { generateNumbers } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { CollectionManager } from "@/components/collection-manager";
+import { generateNumbers } from "@/lib/utils";
 
 export default function ThreeUpPage() {
   const [numbers, setNumbers] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    const savedData = localStorage.getItem('jantrik-3up');
+    const savedData = localStorage.getItem("jantrik-3up");
     if (savedData) {
       setNumbers(JSON.parse(savedData));
     } else {
@@ -19,7 +19,7 @@ export default function ThreeUpPage() {
 
   const handleUpdate = (updatedNumbers: Record<string, number>) => {
     setNumbers(updatedNumbers);
-    localStorage.setItem('jantrik-3up', JSON.stringify(updatedNumbers));
+    localStorage.setItem("jantrik-3up", JSON.stringify(updatedNumbers));
   };
 
   return (

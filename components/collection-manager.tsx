@@ -1,27 +1,50 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ArrowLeft, Download, Plus, Search, RotateCcw, AlertTriangle } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { toast } from 'sonner';
-import { exportToExcel } from '@/lib/excel-export';
-import { cn, generateNumbers } from '@/lib/utils';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  ArrowLeft,
+  Download,
+  Plus,
+  Search,
+  RotateCcw,
+  AlertTriangle,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { toast } from "sonner";
+import { exportToExcel } from "@/lib/excel-export";
+import { cn, generateNumbers } from "@/lib/utils";
 
 interface CollectionManagerProps {
   title: string;
   subtitle: string;
   numbers: Record<string, number>;
   onUpdate: (numbers: Record<string, number>) => void;
-  type: '3up' | 'down';
+  type: "3up" | "down";
   minNumber: number;
   maxNumber: number;
   numberLength: number;
@@ -38,9 +61,9 @@ export function CollectionManager({
   numberLength,
 }: CollectionManagerProps) {
   const router = useRouter();
-  const [inputNumber, setInputNumber] = useState('');
-  const [inputAmount, setInputAmount] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [inputNumber, setInputNumber] = useState("");
+  const [inputAmount, setInputAmount] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -53,34 +76,49 @@ export function CollectionManager({
     const amountValue = parseFloat(inputAmount);
 
     // Validation
-    if (isNaN(numberValue) || numberValue < minNumber || numberValue > maxNumber) {
-      toast.error(`Please enter a valid number between ${minNumber.toString().padStart(numberLength, '0')} and ${maxNumber.toString().padStart(numberLength, '0')}`);
+    if (
+      isNaN(numberValue) ||
+      numberValue < minNumber ||
+      numberValue > maxNumber
+    ) {
+      toast.error(
+        `Please enter a valid number between ${minNumber
+          .toString()
+          .padStart(numberLength, "0")} and ${maxNumber
+          .toString()
+          .padStart(numberLength, "0")}`
+      );
       return;
     }
 
     if (isNaN(amountValue) || amountValue <= 0) {
-      toast.error('Please enter a valid amount greater than 0');
+      toast.error("Please enter a valid amount greater than 0");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const formattedNumber = numberValue.toString().padStart(numberLength, '0');
+      const formattedNumber = numberValue
+        .toString()
+        .padStart(numberLength, "0");
       const updatedNumbers = {
         ...numbers,
         [formattedNumber]: (numbers[formattedNumber] || 0) + amountValue,
       };
 
       onUpdate(updatedNumbers);
-      setInputNumber('');
-      setInputAmount('');
-      
-      toast.success(`Successfully added ${amountValue} to number ${formattedNumber}`, {
-        description: `New total: ${updatedNumbers[formattedNumber]}`,
-      });
+      setInputNumber("");
+      setInputAmount("");
+
+      toast.success(
+        `Successfully added ${amountValue} to number ${formattedNumber}`,
+        {
+          description: `New total: ${updatedNumbers[formattedNumber]}`,
+        }
+      );
     } catch (error) {
-      toast.error('Failed to update number. Please try again.');
+      toast.error("Failed to update number. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,21 +126,18 @@ export function CollectionManager({
 
   const handleExport = async () => {
     if (isExporting) return;
-    
+
     setIsExporting(true);
-    
+
     try {
-      // Get all numbers (including those with 0 amounts) and sort them
-      const allNumbers = Object.keys(numbers).length > 0 ? numbers : {};
-      
-      // If no numbers exist, generate the full range
-      if (Object.keys(allNumbers).length === 0) {
-        for (let i = minNumber; i <= maxNumber; i++) {
-          const formattedNumber = i.toString().padStart(numberLength, '0');
-          allNumbers[formattedNumber] = 0;
-        }
+      // ✅ Always generate full range
+      const allNumbers = generateNumbers(minNumber, maxNumber, numberLength);
+
+      // ✅ Overwrite with actual entered numbers
+      for (const key in numbers) {
+        allNumbers[key] = numbers[key];
       }
-      
+
       const data = Object.entries(allNumbers)
         .map(([number, amount]) => ({
           Number: number,
@@ -111,15 +146,24 @@ export function CollectionManager({
         .sort((a, b) => a.Number.localeCompare(b.Number));
 
       if (data.length === 0) {
-        toast.error('No data available to export');
+        toast.error("No data available to export");
         return;
       }
 
-      await exportToExcel(data, `${type}-collection-${new Date().toISOString().split('T')[0]}`);
-      toast.success(`Collection exported successfully! (${data.length} numbers exported)`);
+      await exportToExcel(
+        data,
+        `${type}-collection-${new Date().toISOString().split("T")[0]}`,
+        minNumber,
+        maxNumber,
+        numberLength
+      );
+
+      toast.success(
+        `Collection exported successfully! (${data.length} numbers exported)`
+      );
     } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Failed to export collection. Please try again.');
+      console.error("Export error:", error);
+      toast.error("Failed to export collection. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -127,40 +171,52 @@ export function CollectionManager({
 
   const handleReset = async () => {
     if (isResetting) return;
-    
+
     setIsResetting(true);
-    
+
     try {
       // Clear the localStorage for this collection
       localStorage.removeItem(`jantrik-${type}`);
-      
+
       // Reset to initial empty state
-      const initialNumbers = generateNumbers(minNumber, maxNumber, numberLength);
+      const initialNumbers = generateNumbers(
+        minNumber,
+        maxNumber,
+        numberLength
+      );
       onUpdate(initialNumbers);
-      
+
       // Clear search and input fields
-      setSearchTerm('');
-      setInputNumber('');
-      setInputAmount('');
-      
+      setSearchTerm("");
+      setInputNumber("");
+      setInputAmount("");
+
       toast.success(`${title} has been reset successfully!`, {
-        description: 'All data has been cleared and the collection is now empty.',
+        description:
+          "All data has been cleared and the collection is now empty.",
       });
     } catch (error) {
-      console.error('Reset error:', error);
-      toast.error('Failed to reset collection. Please try again.');
+      console.error("Reset error:", error);
+      toast.error("Failed to reset collection. Please try again.");
     } finally {
       setIsResetting(false);
     }
   };
 
-  const filteredNumbers = Object.entries(numbers).filter(([number, amount]) => {
-    if (!searchTerm) return amount > 0;
-    return number.includes(searchTerm) && amount > 0;
-  }).sort(([a], [b]) => a.localeCompare(b));
+  const filteredNumbers = Object.entries(numbers)
+    .filter(([number, amount]) => {
+      if (!searchTerm) return amount > 0;
+      return number.includes(searchTerm) && amount > 0;
+    })
+    .sort(([a], [b]) => a.localeCompare(b));
 
-  const totalAmount = Object.values(numbers).reduce((sum, amount) => sum + amount, 0);
-  const activeNumbers = Object.values(numbers).filter(amount => amount > 0).length;
+  const totalAmount = Object.values(numbers).reduce(
+    (sum, amount) => sum + amount,
+    0
+  );
+  const activeNumbers = Object.values(numbers).filter(
+    (amount) => amount > 0
+  ).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -171,7 +227,7 @@ export function CollectionManager({
             <Button
               variant="outline"
               size="icon"
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -185,12 +241,12 @@ export function CollectionManager({
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            
+
             {/* Reset Button with Confirmation */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   className="gap-2"
                   disabled={isResetting || activeNumbers === 0}
                 >
@@ -206,18 +262,27 @@ export function CollectionManager({
                   </AlertDialogTitle>
                   <AlertDialogDescription className="space-y-2">
                     <p>
-                      Are you sure you want to reset the <strong>{title}</strong>?
+                      Are you sure you want to reset the{" "}
+                      <strong>{title}</strong>?
                     </p>
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm">
-                      <p className="font-medium text-red-800 dark:text-red-200 mb-1">This action will:</p>
+                      <p className="font-medium text-red-800 dark:text-red-200 mb-1">
+                        This action will:
+                      </p>
                       <ul className="text-red-700 dark:text-red-300 space-y-1">
-                        <li>• Clear all {activeNumbers} numbers with amounts</li>
-                        <li>• Remove total amount of {totalAmount.toLocaleString()}</li>
+                        <li>
+                          • Clear all {activeNumbers} numbers with amounts
+                        </li>
+                        <li>
+                          • Remove total amount of{" "}
+                          {totalAmount.toLocaleString()}
+                        </li>
                         <li>• Delete all stored data permanently</li>
                       </ul>
                     </div>
                     <p className="text-sm font-medium">
-                      This action cannot be undone. Consider exporting your data first.
+                      This action cannot be undone. Consider exporting your data
+                      first.
                     </p>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -228,19 +293,19 @@ export function CollectionManager({
                     className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
                     disabled={isResetting}
                   >
-                    {isResetting ? 'Resetting...' : 'Yes, Reset Collection'}
+                    {isResetting ? "Resetting..." : "Yes, Reset Collection"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
 
-            <Button 
-              onClick={handleExport} 
+            <Button
+              onClick={handleExport}
               className="gap-2"
               disabled={isExporting}
             >
               <Download className="h-4 w-4" />
-              {isExporting ? 'Exporting...' : 'Export Excel'}
+              {isExporting ? "Exporting..." : "Export Excel"}
             </Button>
           </div>
         </div>
@@ -252,7 +317,9 @@ export function CollectionManager({
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {activeNumbers}
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Active Numbers</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Active Numbers
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -260,7 +327,9 @@ export function CollectionManager({
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {totalAmount.toLocaleString()}
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Total Amount</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Total Amount
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -268,7 +337,9 @@ export function CollectionManager({
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {maxNumber - minNumber + 1}
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Available Numbers</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Available Numbers
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -295,7 +366,11 @@ export function CollectionManager({
                       type="number"
                       value={inputNumber}
                       onChange={(e) => setInputNumber(e.target.value)}
-                      placeholder={`Enter ${minNumber.toString().padStart(numberLength, '0')}-${maxNumber.toString().padStart(numberLength, '0')}`}
+                      placeholder={`Enter ${minNumber
+                        .toString()
+                        .padStart(numberLength, "0")}-${maxNumber
+                        .toString()
+                        .padStart(numberLength, "0")}`}
                       min={minNumber}
                       max={maxNumber}
                       required
@@ -316,12 +391,12 @@ export function CollectionManager({
                       className="text-center text-lg"
                     />
                   </div>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? 'Adding...' : 'Add Amount'}
+                    {isSubmitting ? "Adding..." : "Add Amount"}
                   </Button>
                 </form>
               </CardContent>
@@ -367,13 +442,17 @@ export function CollectionManager({
                                 Number
                               </div>
                             </div>
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className={cn(
                                 "text-base px-3 py-1",
-                                amount >= 1000 && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-                                amount >= 500 && amount < 1000 && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-                                amount < 500 && "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                                amount >= 1000 &&
+                                  "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+                                amount >= 500 &&
+                                  amount < 1000 &&
+                                  "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                                amount < 500 &&
+                                  "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
                               )}
                             >
                               {amount.toLocaleString()}
@@ -387,9 +466,13 @@ export function CollectionManager({
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <div className="text-slate-400 text-lg mb-2">No numbers found</div>
+                      <div className="text-slate-400 text-lg mb-2">
+                        No numbers found
+                      </div>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {searchTerm ? 'Try adjusting your search term' : 'Start by adding amounts to numbers'}
+                        {searchTerm
+                          ? "Try adjusting your search term"
+                          : "Start by adding amounts to numbers"}
                       </p>
                     </div>
                   )}

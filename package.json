@@ -49,11 +49,13 @@
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
-    "next": "^13.5.11",
+    "next": "^15.3.4",
     "next-themes": "^0.3.0",
-    "postcss": "8.4.30",
+    "postcss": "^8.5.6",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.2.0",
@@ -70,6 +72,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.7",
     "@types/xlsx": "^0.0.35"
   }
 }
