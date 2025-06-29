@@ -10,14 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  BadgeDollarSign,
-  Calculator,
-  NotebookText,
-  TrendingDown,
-} from "lucide-react";
+import { Calculator, NotebookText, TrendingDown } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
@@ -37,7 +31,7 @@ export default function Home() {
 
         <div className="flex flex-col items-center gap-4 pt-6 pb-8">
           <h2 className="text-6xl font-medium">Jantrik Collection</h2>
-          <p className="max-w-xl text-center text-lg opacity-70">
+          <p className="max-w-xl text-center text-base opacity-70">
             An easy-to-use platform for organizing your number bids. Add
             numbers, track amounts, and export your collection data for
             hassle-free record-keeping.

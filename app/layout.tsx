@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Jantrik Collection",
   description:
     "Professional collection management system for 3up and down numbers",
+  icons: {
+    icon: "/fav-icon.png",
+  },
 };
 
 export default function RootLayout({
