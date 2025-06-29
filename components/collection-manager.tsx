@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react"; // Added useRef and useEffect
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,6 +68,32 @@ export function CollectionManager({
   const [isExporting, setIsExporting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
+  // Refs for input elements
+  const numberInputRef = useRef<HTMLInputElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-focus number input on mount
+  useEffect(() => {
+    numberInputRef.current?.focus();
+  }, []);
+
+  // Handle Enter key navigation
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    field: "number" | "amount"
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission
+
+      if (field === "number" && inputNumber) {
+        amountInputRef.current?.focus();
+      } else if (field === "amount" && inputAmount) {
+        submitButtonRef.current?.click(); // Trigger form submission
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -117,6 +143,9 @@ export function CollectionManager({
           description: `New total: ${updatedNumbers[formattedNumber]}`,
         }
       );
+
+      // Refocus on number input after submission
+      numberInputRef.current?.focus();
     } catch (error) {
       toast.error("Failed to update number. Please try again.");
     } finally {
@@ -130,10 +159,10 @@ export function CollectionManager({
     setIsExporting(true);
 
     try {
-      // ✅ Always generate full range
+      // Always generate full range
       const allNumbers = generateNumbers(minNumber, maxNumber, numberLength);
 
-      // ✅ Overwrite with actual entered numbers
+      // Overwrite with actual entered numbers
       for (const key in numbers) {
         allNumbers[key] = numbers[key];
       }
@@ -195,6 +224,9 @@ export function CollectionManager({
         description:
           "All data has been cleared and the collection is now empty.",
       });
+
+      // Refocus on number input after reset
+      numberInputRef.current?.focus();
     } catch (error) {
       console.error("Reset error:", error);
       toast.error("Failed to reset collection. Please try again.");
@@ -366,6 +398,8 @@ export function CollectionManager({
                       type="number"
                       value={inputNumber}
                       onChange={(e) => setInputNumber(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, "number")}
+                      ref={numberInputRef}
                       placeholder={`Enter ${minNumber
                         .toString()
                         .padStart(numberLength, "0")}-${maxNumber
@@ -385,6 +419,8 @@ export function CollectionManager({
                       step="0.01"
                       value={inputAmount}
                       onChange={(e) => setInputAmount(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, "amount")}
+                      ref={amountInputRef}
                       placeholder="Enter amount"
                       min="0.01"
                       required
@@ -395,6 +431,7 @@ export function CollectionManager({
                     type="submit"
                     className="w-full"
                     disabled={isSubmitting}
+                    ref={submitButtonRef}
                   >
                     {isSubmitting ? "Adding..." : "Add Amount"}
                   </Button>
