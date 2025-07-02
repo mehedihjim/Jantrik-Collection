@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { MinusCircle } from "lucide-react";
 import {
   ArrowLeft,
   Download,
@@ -67,6 +68,9 @@ export function CollectionManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [deductingNumber, setDeductingNumber] = useState<string | null>(null);
+  const [deductAmount, setDeductAmount] = useState("");
+  const [isDeducting, setIsDeducting] = useState(false);
 
   // Refs for input elements
   const numberInputRef = useRef<HTMLInputElement>(null);
@@ -140,7 +144,9 @@ export function CollectionManager({
       toast.success(
         `Successfully added ${amountValue} to number ${formattedNumber}`,
         {
-          description: `New total: ${updatedNumbers[formattedNumber]}`,
+          description: `New total: ${updatedNumbers[
+            formattedNumber
+          ].toLocaleString()}`,
         }
       );
 
@@ -467,7 +473,7 @@ export function CollectionManager({
                   {filteredNumbers.length > 0 ? (
                     <div className="space-y-2">
                       {filteredNumbers.map(([number, amount], index) => (
-                        <div key={number}>
+                        <div key={number} className="space-y-1">
                           <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <div className="flex items-center gap-3">
                               <div className="w-16 h-12 bg-slate-100 dark:bg-slate-700 rounded-md flex items-center justify-center">
@@ -479,22 +485,120 @@ export function CollectionManager({
                                 Number
                               </div>
                             </div>
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                "text-base px-3 py-1",
-                                amount >= 1000 &&
-                                  "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-                                amount >= 500 &&
-                                  amount < 1000 &&
-                                  "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-                                amount < 500 &&
-                                  "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
-                              )}
-                            >
-                              {amount.toLocaleString()}
-                            </Badge>
+                            <div className="flex gap-2">
+                              <div className="flex items-center gap-8 text-red-800">
+                                {/* Remove button */}
+                                <Button
+                                  variant="outline"
+                                  size="xs"
+                                  disabled={amount <= 0 || isDeducting}
+                                  onClick={() => {
+                                    setDeductingNumber(number);
+                                    setDeductAmount("");
+                                  }}
+                                >
+                                  <MinusCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "text-base px-3 py-1",
+                                  amount >= 1000 &&
+                                    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+                                  amount >= 500 &&
+                                    amount < 1000 &&
+                                    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                                  amount < 500 &&
+                                    "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                                )}
+                              >
+                                {amount.toLocaleString()}
+                              </Badge>
+                            </div>
                           </div>
+
+                          {/* Deduction input form shown only for the selected number */}
+                          {deductingNumber === number && (
+                            <form
+                              className="flex items-center gap-2 px-3"
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                if (isDeducting) return;
+
+                                const deductionValue = parseFloat(deductAmount);
+
+                                if (
+                                  isNaN(deductionValue) ||
+                                  deductionValue <= 0
+                                ) {
+                                  toast.error(
+                                    "Enter a valid deduction amount greater than 0"
+                                  );
+                                  return;
+                                }
+
+                                if (deductionValue > amount) {
+                                  toast.error(
+                                    "Deduction amount cannot exceed current amount"
+                                  );
+                                  return;
+                                }
+
+                                setIsDeducting(true);
+
+                                try {
+                                  const updatedNumbers = {
+                                    ...numbers,
+                                    [number]: amount - deductionValue,
+                                  };
+                                  onUpdate(updatedNumbers);
+                                  toast.success(
+                                    `Deducted ${deductionValue.toLocaleString()} from number ${number}`
+                                  );
+                                  setDeductingNumber(null);
+                                  setDeductAmount("");
+                                } catch (error) {
+                                  toast.error(
+                                    "Failed to deduct amount. Please try again."
+                                  );
+                                } finally {
+                                  setIsDeducting(false);
+                                }
+                              }}
+                            >
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                max={amount}
+                                value={deductAmount}
+                                onChange={(e) =>
+                                  setDeductAmount(e.target.value)
+                                }
+                                placeholder="Deduct amount"
+                                className="text-center text-sm font-mono w-28 mb-2"
+                                autoFocus
+
+                              />
+                              <Button
+                                type="submit"
+                                size="sm"
+                                disabled={isDeducting}
+                              >
+                                {isDeducting ? "Deducting..." : "Confirm"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDeductingNumber(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </form>
+                          )}
+
                           {index < filteredNumbers.length - 1 && (
                             <Separator className="my-1" />
                           )}
