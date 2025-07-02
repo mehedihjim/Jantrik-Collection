@@ -240,7 +240,7 @@ export function CollectionManager({
       if (!searchTerm) return amount > 0;
       return number.includes(searchTerm) && amount > 0;
     })
-    .sort(([a], [b]) => a.localeCompare(b));
+    .sort(([, amountA], [, amountB]) => amountB - amountA); // sort by amount, descending
 
   const totalAmount = Object.values(numbers).reduce(
     (sum, amount) => sum + amount,
