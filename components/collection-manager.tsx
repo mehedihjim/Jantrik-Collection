@@ -102,10 +102,21 @@ export function CollectionManager({
     e.preventDefault();
     if (isSubmitting) return;
 
+    const inputLen = inputNumber.length;
+
+    if (type === "down" && inputLen !== 2) {
+      toast.error("Please enter exactly 2 digits for down collection");
+      return;
+    }
+
+    if (type === "3up" && inputLen !== 3) {
+      toast.error("Please enter exactly 3 digits for 3up collection");
+      return;
+    }
+
     const numberValue = parseInt(inputNumber);
     const amountValue = parseFloat(inputAmount);
 
-    // Validation
     if (
       isNaN(numberValue) ||
       numberValue < minNumber ||
@@ -150,7 +161,6 @@ export function CollectionManager({
         }
       );
 
-      // Refocus on number input after submission
       numberInputRef.current?.focus();
     } catch (error) {
       toast.error("Failed to update number. Please try again.");
@@ -411,8 +421,6 @@ export function CollectionManager({
                         .padStart(numberLength, "0")}-${maxNumber
                         .toString()
                         .padStart(numberLength, "0")}`}
-                      min={minNumber}
-                      max={maxNumber}
                       required
                       className="text-center font-mono text-lg"
                     />
@@ -579,7 +587,6 @@ export function CollectionManager({
                                 placeholder="Deduct amount"
                                 className="text-center text-sm font-mono w-28 mb-2"
                                 autoFocus
-
                               />
                               <Button
                                 type="submit"
